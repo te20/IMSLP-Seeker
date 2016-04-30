@@ -1,181 +1,191 @@
 <!doctype html>
 <html>
 
-<head>
+  <head>
     <meta charset="utf-8" />
     <title>IMSLP API Client</title>
     <style>
-        .index {
-            cursor: pointer;
-            font-weight: bold;
-            margin-left: 0px;
-        }
+      .index {
+        cursor: pointer;
+        font-weight: bold;
+        margin-left: 0px;
+      }
 
-        .people {
-            cursor: pointer;
-            font-weight: normal;
-            margin-left: 10px;
-        }
+      .people {
+        cursor: pointer;
+        font-weight: normal;
+        margin-left: 10px;
+      }
 
-        .work {
-            cursor: pointer;
-            font-weight: lighter;
-            color: blue;
-            margin-left: 20px;
-        }
+      .work {
+        cursor: pointer;
+        font-weight: lighter;
+        color: blue;
+        margin-left: 20px;
+      }
     </style>
     <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
     <script src="jquery.xdomainajax.js"></script>
     <script>
-        var works = {};
-        var prevPeople;
-        var prevIndex;
+      var works = {};
+      var prevPeople;
+      var prevIndex;
 
-        /*
-        $(function () {
-            $.ajax({
-                url: 'http://imslp.org/imslpscripts/API.ISCR.php?account=worklist/disclaimer=accepted/sort=id/type=1/start=0/retformat=json',
-                type: 'GET',
-                success: function (res) {
-                    // console.log(res.responseText);
-                    //$('#result').html(res.responseText);
-                    var result = $('<div/>').html(res.responseText);
-                    var people = JSON.parse(result.html());
-                    console.dir(people);
-                    Object.keys(people).forEach(function (p) {
-                        $('<div/>').text(people[p].id).appendTo('#people');
-                    });
-                }
+      /*
+      $(function () {
+          $.ajax({
+              url: 'http://imslp.org/imslpscripts/API.ISCR.php?account=worklist/disclaimer=accepted/sort=id/type=1/start=0/retformat=json',
+              type: 'GET',
+              success: function (res) {
+                  // console.log(res.responseText);
+                  //$('#result').html(res.responseText);
+                  var result = $('<div/>').html(res.responseText);
+                  var people = JSON.parse(result.html());
+                  console.dir(people);
+                  Object.keys(people).forEach(function (p) {
+                      $('<div/>').text(people[p].id).appendTo('#people');
+                  });
+              }
+          });
+      });
+      */
+
+      var clickWork = function(e) {
+        e.stopPropagation();
+      };
+
+      var clickPeople = function(e) {
+        e.stopPropagation();
+
+        var people = $(this);
+        var peopleName = people.attr('id');
+        console.log(peopleName + ' is clicked');
+
+        if (people.children().length > 0) {
+          people.empty();
+          people.text(peopleName);
+          prevPeople = null;
+          return;
+        }
+
+        if (prevPeople) {
+          prevPeople.empty();
+          prevPeople.text(prevPeople.attr('id'));
+        }
+
+        prevPeople = people;
+
+        Object.keys(works).forEach(function(name) {
+          if (name === peopleName) {
+            console.log(works[name]);
+            works[name].forEach(function(work) {
+              var element = $('<div/>');
+              var link = $('<a target="_blank" id="' + work.id + '"href="' + work.permlink + '"/>').addClass('work').text(work.id);
+              link.appendTo(element);
+              element.appendTo(people);
             });
+          }
         });
-        */
+      };
 
-        var clickWork = function(e) {
-            e.stopPropagation();
-        };
+      var clickIndex = function(e) {
+        e.stopPropagation();
 
-        var clickPeople = function(e) {
-            e.stopPropagation();
+        var parent = $(this);
+        var index = parent.attr('id');
+        console.log(index + ' is clicked');
 
-            var people = $(this);
-            var peopleName = people.attr('id');
-            console.log(peopleName + ' is clicked');
+        if (parent.children().length > 0) {
+          parent.empty();
+          parent.text(index);
+          prevIndex = null;
+          return;
+        }
 
-            if (people.children().length > 0) {
-                people.empty();
-                people.text(peopleName);
-                prevPeople = null;
-                return;
-            }
+        if (prevIndex) {
+          prevIndex.empty();
+          prevIndex.text(prevIndex.attr('id'));
+        }
 
-            if (prevPeople) {
-                prevPeople.empty();
-                prevPeople.text(prevPeople.attr('id'));
-            }
+        prevIndex = parent;
 
-            prevPeople = people;
-
-            Object.keys(works).forEach(function(name) {
-                if (name === peopleName) {
-                    console.log(works[name]);
-                    works[name].forEach(function(work) {
-                        var element = $('<div/>');
-                        var link = $('<a target="_blank" id="' + work.id + '"href="' + work.permlink + '"/>').addClass('work').text(work.id);
-                        link.appendTo(element);
-                        element.appendTo(people);
-                    });
-                }
-            });
-        };
-
-        var clickIndex = function(e) {
-            e.stopPropagation();
-
-            var parent = $(this);
-            var index = parent.attr('id');
-            console.log(index + ' is clicked');
-
-            if (parent.children().length > 0) {
-                parent.empty();
-                parent.text(index);
-                prevIndex = null;
-                return;
-            }
-
-            if (prevIndex) {
-                prevIndex.empty();
-                prevIndex.text(prevIndex.attr('id'));
-            }
-
-            prevIndex = parent;
-
-            Object.keys(works).forEach(function(name) {
-                if (name[0] === index) {
-                    var element = $('<div id="' + name + '"/>').addClass('people').text(name);
-                    element.appendTo(parent);
-                    element.click(clickPeople);
-                }
-            });
-        };
-
-        var getWorks = function(start) {
-            console.log('getting works from ' + start + '...');
-            $.ajax({
-                url: 'http://imslp.org/imslpscripts/API.ISCR.php?account=worklist/disclaimer=accepted/sort=id/type=2/start=' + start + '/retformat=json',
-                type: 'GET',
-                success: function(res) {
-                    //$('#result').html(res.responseText);
-                    //NOTE In the JSON response one character is one entry ({'0': 'a', '1': 'b', ...}). To convert to JSON string, insert 
-                    //     repsonse into <div> tag. 
-                    var response = $('<div/>').html(res.responseText);
-                    var list = JSON.parse(response.html());
-                    var nWorks = Object.keys(list).length - 1;
-
-                    console.log(list.metadata);
-                    console.dir(list);
-                    console.log('number of works: ', nWorks);
-
-                    $('#status').text(list.metadata.start + nWorks + ' works are downloading.....');
-
-                    Object.keys(list).forEach(function (l) {
-                        if (isNaN(l)) {
-                            return;
-                        }
-
-                        var work = list[l];
-                        var re = /\s*:\s*/;
-                        var name = work.parent.split(re);
-                        if (!(name[1] in works)) {
-                            works[name[1]] = [];
-                        }
-                        works[name[1]].push(work);
-                    });
-                    console.dir(works);
-
-                    if (list.metadata.moreresultsavailable) {
-                        getWorks(list.metadata.start + nWorks);
-                    } else {
-                        $('#status').text(list.metadata.start + nWorks + ' works downloaded');
-                    }
-                }
-            });
-
-        };
-
-        $(function() {
-            for (var i = 65; i < 91; i++) {
-                var index = String.fromCharCode(i);
-                var element = $('<div id="' + index + '"/>').addClass('index').text(index);
-                element.appendTo('#works');
-                element.click(clickIndex);
-            }
-
-            getWorks(0);
+        Object.keys(works).forEach(function(name) {
+          if (name[0] === index) {
+            var element = $('<div id="' + name + '"/>').addClass('people').text(name);
+            element.appendTo(parent);
+            element.click(clickPeople);
+          }
         });
+      };
+
+      var getWorks = function(start) {
+        console.log('getting works from ' + start + '...');
+        $.ajax({
+          url: 'http://imslp.org/imslpscripts/API.ISCR.php?account=worklist/disclaimer=accepted/sort=id/type=2/start=' + start + '/retformat=json',
+          type: 'GET',
+          success: function(res) {
+            //$('#result').html(res.responseText);
+            //NOTE In the JSON response one character is one entry ({'0': 'a', '1': 'b', ...}). To convert to JSON string, insert
+            //     repsonse into <div> tag.
+            var response = $('<div/>').html(res.responseText);
+            var list = JSON.parse(response.html());
+            var nWorks = Object.keys(list).length - 1;
+
+            console.log(list.metadata);
+            console.dir(list);
+            console.log('number of works: ', nWorks);
+
+            $('#status').text(list.metadata.start + nWorks + ' works are downloading.....');
+
+            Object.keys(list).forEach(function(l) {
+              if (isNaN(l)) {
+                return;
+              }
+
+              var work = list[l];
+              var re = /\s*:\s*/;
+              var name = work.parent.split(re);
+              if (!(name[1] in works)) {
+                works[name[1]] = [];
+              }
+              works[name[1]].push(work);
+            });
+            console.dir(works);
+
+            if (list.metadata.moreresultsavailable) {
+              getWorks(list.metadata.start + nWorks);
+            } else {
+              $('#status').text(list.metadata.start + nWorks + ' works downloaded');
+              var blob = new Blob([works], {
+                type: 'application/json'
+              });
+
+              var a = document.createElement('a');
+              a.href = URL.createObjectURL(blob);
+              a.target = '_blank';
+              a.download = 'imslp-works.json';
+              a.click();
+              URL.revokeObjectURL(a.href);
+            }
+          }
+        });
+
+      };
+
+      $(function() {
+        for (var i = 65; i < 91; i++) {
+          var index = String.fromCharCode(i);
+          var element = $('<div id="' + index + '"/>').addClass('index').text(index);
+          element.appendTo('#works');
+          element.click(clickIndex);
+        }
+
+        getWorks(0);
+      });
     </script>
-</head>
+  </head>
 
-<body>
+  <body>
     <h1>IMSLP Work List Browser</h1>
     <!--
     <h2>People</h2>
@@ -187,6 +197,6 @@
     <h2>Works</h2>
     <div id="works">
     </div>
-</body>
+  </body>
 
 </html>

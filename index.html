@@ -125,6 +125,8 @@
                 type: 'GET',
                 success: function(res) {
                     //$('#result').html(res.responseText);
+                    //NOTE In the JSON response one character is one entry ({'0': 'a', '1': 'b', ...}). To convert to JSON string, insert 
+                    //     repsonse into <div> tag. 
                     var response = $('<div/>').html(res.responseText);
                     var list = JSON.parse(response.html());
                     var nWorks = Object.keys(list).length - 1;
